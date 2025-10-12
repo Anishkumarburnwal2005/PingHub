@@ -34,6 +34,10 @@
     />
   </head>
   <body>
+    <div id="onlineUsers"></div>
+
+    <h5 id="typing"></h5>
+
     <ul id="messages"></ul>
 
     <form id="form">
@@ -61,6 +65,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
+      let counter = 0;
       const socket = io({
         auth: {
           serverOffset: 0,
@@ -71,25 +76,62 @@
       const form = document.getElementById("form");
       const messages = document.getElementById("messages");
       const conBtn = document.getElementById("buttonCon");
+      const onlineUsers = document.getElementById("onlineUsers");
+      const typingTracker = document.getElementById("typing");
+
+      //Nickname
+
+      let nickName, room;
+      socket.on("connect", () => {
+        nickName = prompt("Enter your nickname: ");
+        room = prompt("Enter room name: ");
+
+        if (!nickName) nickName = "Anonymous";
+        if (!room) nickName = "general";
+
+        socket.emit("join room", nickName, room);
+        socket.nickname = nickName;
+        socket.room = room;
+      });
+
+      socket.on(
+        "Online users",
+        (users) =>
+          (onlineUsers.textContent = `Online users: ${users.join(", ")}`)
+      );
+
+      //Connected
+      socket.on("user connected", (name) =>
+        console.log(`${name} is connected`)
+      );
+
+      //Disconnected
+      socket.on("user disconnected", (name) =>
+        console.log(`${name} is disconnected`)
+      );
 
       form.addEventListener("submit", (e) => {
         e.preventDefault();
         if (input.value) {
-          socket.emit("chat message", input.value);
+          const clientOffset = `${Date.now()}-${socket.id}-${counter++}`;
+          socket.emit("chat message", input.value, clientOffset, nickName);
           input.value = "";
         }
       });
 
-      socket.on("chat message", (msg, serverOffset) => {
+      function scrollBottom() {
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      socket.on("chat message", (msg, serverOffset, nickname) => {
         const item = document.createElement("li");
-        item.innerText = msg;
+        item.innerText = `${nickname}: ${msg}`;
         messages.appendChild(item);
-        window.scrollTo(0, document.body.scrollHeight);
+        scrollBottom();
         socket.auth.serverOffset = serverOffset;
       });
 
-      conBtn.addEventListener("click", (e) => {
-        e.preventDefault();
+      conBtn.addEventListener("click", () => {
         if (socket.connected) {
           socket.disconnect();
           conBtn.innerText = "Connect";
@@ -97,6 +139,26 @@
           socket.connect();
           conBtn.innerText = "Disconnect";
         }
+      });
+
+      let typingTimeout;
+
+      input.addEventListener("input", () => {
+        if (input.value.trim()) {
+          socket.emit("typing");
+          clearTimeout(typingTimeout);
+          typingTimeout = setTimeout(() => socket.emit("stop typing"), 1000);
+        } else {
+          socket.emit("stop typing");
+        }
+      });
+
+      socket.on("user typing", (name) => {
+        typingTracker.textContent = `${name} is typing...`;
+      });
+
+      socket.on("user stop typing", () => {
+        typingTracker.textContent = "";
       });
     </script>
   </body>

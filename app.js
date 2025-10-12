@@ -13,6 +13,9 @@ const io = new Server(server, {
 
 const sqlite3 = require("sqlite3");
 const { open } = require("sqlite");
+const { connected } = require("node:process");
+
+const users = new Map();
 
 async function main() {
   const db = await open({
@@ -21,38 +24,109 @@ async function main() {
   });
 
   await db.exec(`
-    CREATE TABLE IF NOT EXISTS messages(
+    CREATE TABLE IF NOT EXISTS chats(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      room TEXT,
       client_offset TEXT UNIQUE,
-      content TEXT
+      content TEXT,
+      nickname TEXT
     );
   `);
 
   io.on("connection", async (socket) => {
-    console.log("A user is connected");
+    //db.run("DELETE FROM chats;");
+    socket.on("join room", (nickname, room) => {
+      socket.nickname = nickname || "Anonymous";
 
-    socket.on("chat message", async (msg) => {
-      const sql = "INSERT INTO messages (content) VALUES(?)";
+      socket.room = room || "general";
+      socket.join(socket.room);
 
-      let result;
-      try {
-        result = await db.run(sql, [msg]);
-      } catch (e) {
-        return;
-      }
-      io.emit("chat message", msg, result.lastID);
+      users.set(socket.id, {
+        nickname: socket.nickname,
+        room: socket.room,
+        connected: true,
+      });
+
+      const onlineUsers = Array.from(users.values())
+        .filter((u) => u.connected && u.room === room)
+        .map((u) => u.nickname);
+
+      io.to(room).emit("Online users", onlineUsers);
+      socket.broadcast.to(room).emit("user connected", nickname);
     });
 
-    if (!socket.recovered) {
-      await db.each(
-        `SELECT id, content FROM messages WHERE id > ?`,
-        [socket.handshake.auth.serverOffset || 0],
-        (err, row) => socket.emit("chat message", row.content, row.id)
+    socket.on("chat message", async (msg, clientOffset, nickname) => {
+      if (!socket.room) return;
+
+      const sql =
+        "INSERT INTO chats (content, client_offset, nickname, room) VALUES(?, ?, ?, ?)";
+
+      try {
+        let result = await db.run(sql, [
+          msg,
+          clientOffset,
+          nickname,
+          socket.room,
+        ]);
+        if (result.changes > 0) {
+          io.to(socket.room).emit("chat message", msg, result.lastID, nickname);
+        }
+      } catch (e) {
+        if (e.errno === 19) {
+          console.log(e);
+        } else {
+          console.log(`DB err: ${e.message}`);
+          return;
+        }
+      }
+    });
+
+    socket.on("typing", () => {
+      socket.broadcast.to(socket.room).emit("user typing", socket.nickname);
+    });
+
+    socket.on("stop typing", () => {
+      if (socket.room) {
+        socket.broadcast
+          .to(socket.room)
+          .emit("user stop typing", socket.nickname);
+      }
+    });
+
+    if (!socket.recovered && socket.room) {
+      const chats = await db.all(
+        `SELECT id, content, nickname FROM chats WHERE room = ? AND id > ? ORDER BY id ASC`,
+        [socket.room, socket.handshake.auth.serverOffset || 0]
       );
+
+      chats.forEach((chat) => {
+        socket.emit("chat message", chat.content, chat.id, chat.nickname);
+      });
+
+      socket.recovered = true;
     }
 
     socket.on("disconnect", () => {
-      console.log("A user is disconnected");
+      // users.delete(socket.id);
+      // io.emit("Online users", Array.from(users.values()));
+      // socket.broadcast.emit("user disconnected", socket.nickname);
+
+      const user = users.get(socket.id);
+      if (user) {
+        user.connected = false;
+      }
+
+      if (socket.room) {
+        const onlineUsers = Array.from(users.values())
+          .filter((u) => u.connected && u.room === socket.room)
+          .map((u) => u.nickname);
+
+        io.to(socket.room).emit("Online users", onlineUsers);
+
+        socket.broadcast
+          .to(socket.room)
+          .emit("user disconnected", socket.nickname);
+      }
     });
   });
 }

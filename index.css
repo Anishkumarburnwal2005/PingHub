@@ -22,7 +22,8 @@ body {
 
 #form {
   position: sticky !important;
-  bottom: 3rem !important;
+  bottom: 1rem !important;
+  margin-top: 1rem;
   padding: 15px 35px;
   background: white;
   border-top: 1px solid #ccc;
