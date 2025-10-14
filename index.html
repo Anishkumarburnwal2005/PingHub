@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Socket</title>
+    <title>PingHub Chat</title>
 
     <!-- Boorstrap -->
     <link
@@ -12,8 +12,6 @@
       integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
       crossorigin="anonymous"
     />
-
-    <link rel="stylesheet" href="./index.css" />
 
     <!-- font-awesome -->
     <link
@@ -32,40 +30,47 @@
       href="https://fonts.googleapis.com/css2?family=Karla:ital,wght@0,200..800;1,200..800&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Raleway:ital,wght@0,100..900;1,100..900&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="index.css" />
   </head>
   <body>
     <div id="onlineUsers"></div>
 
-    <h5 id="typing"></h5>
-
     <ul id="messages"></ul>
+
+    <h5 id="typing"></h5>
 
     <form id="form">
       <div class="row">
-        <div class="col mb-3">
-          <label for="input" class="form-label text">Ask here:</label>
-          <br />
+        <div class="col-10"></div>
+        <div class="col-2">
+          <button class="btn btn-secondary" id="buttonCon">Disconnect</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-3"></div>
+        <div class="col-9 mb-3">
           <input
             type="text"
             class="form-control"
             id="input"
-            placeholder="Ask the question..."
+            placeholder="Type a message..."
             autocomplete="off"
           />
+
           <button class="btn btn-primary" id="button">
             <i class="fa-solid fa-paper-plane"></i>
           </button>
-        </div>
-
-        <div class="col">
-          <button class="btn btn-secondary" id="buttonCon">Disconnect</button>
         </div>
       </div>
     </form>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-      let counter = 0;
+      let counter = 0,
+        lastServerOffset = 0;
       const socket = io({
         auth: {
           serverOffset: 0,
@@ -81,15 +86,18 @@
 
       //Nickname
 
-      let nickName, room;
+      let nickName, room, password;
+
       socket.on("connect", () => {
         nickName = prompt("Enter your nickname: ");
         room = prompt("Enter room name: ");
+        password = prompt("Enter room password: ");
 
-        if (!nickName) nickName = "Anonymous";
-        if (!room) nickName = "general";
+        if (!nickName) nickName = "";
+        if (!room) room = "";
+        if (!password) password = "";
 
-        socket.emit("join room", nickName, room);
+        socket.emit("join room", nickName, room, password);
         socket.nickname = nickName;
         socket.room = room;
       });
@@ -125,10 +133,17 @@
 
       socket.on("chat message", (msg, serverOffset, nickname) => {
         const item = document.createElement("li");
-        item.innerText = `${nickname}: ${msg}`;
+        item.className = nickname === nickName ? "outgoing" : "incoming";
+        item.innerHTML = `
+          <div class="chat-content">
+            <span class="chat-nickname">${nickname}</span>
+            <span class="chat-text">${msg}</span>
+          </div>
+        `;
         messages.appendChild(item);
         scrollBottom();
-        socket.auth.serverOffset = serverOffset;
+        lastServerOffset = serverOffset;
+        socket.auth.serverOffset = lastServerOffset;
       });
 
       conBtn.addEventListener("click", () => {
@@ -159,6 +174,11 @@
 
       socket.on("user stop typing", () => {
         typingTracker.textContent = "";
+      });
+
+      socket.on("join error", (errMsg) => {
+        alert(errMsg);
+        location.reload();
       });
     </script>
   </body>

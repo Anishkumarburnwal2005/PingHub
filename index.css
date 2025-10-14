@@ -1,45 +1,160 @@
-html,
+/* Reset + layout */
 body {
-  height: 100%;
   margin: 0;
   padding: 0;
-}
-
-body {
-  font-family: "Plus Jakarta Sans", sans-serif !important;
-  font-size: 20px !important;
+  background: linear-gradient(135deg, #1e1e2f, #232946);
+  font-family: "Plus Jakarta Sans", sans-serif;
+  color: #fff;
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 }
 
+#onlineUsers {
+  text-align: center;
+  padding: 10px;
+  font-size: 1rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Messages area */
 #messages {
+  list-style: none;
+  padding: 20px;
+  margin: 0;
   flex: 1;
   overflow-y: auto;
-  list-style: none;
-  margin: 0;
-  padding: 1rem;
-}
-
-#form {
-  position: sticky !important;
-  bottom: 1rem !important;
-  margin-top: 1rem;
-  padding: 15px 35px;
-  background: white;
-  border-top: 1px solid #ccc;
-}
-
-#input {
   display: flex;
-  display: inline-block !important;
-  width: 18rem;
-  margin-right: 1rem;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.text {
-  font-weight: 550;
+/* Chat bubbles */
+#messages li {
+  padding: 10px 15px;
+  border-radius: 16px;
+  width: fit-content;
+  max-width: 80%;
+  line-height: 1.4;
+  font-size: 0.95rem;
+  animation: fadeIn 0.3s ease;
 }
 
-#button {
-  border-radius: 15%;
+/* Incoming/Outgoing */
+#messages li.incoming {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.15);
+  border-top-left-radius: 0;
+}
+
+#messages li.outgoing {
+  align-self: flex-end;
+  background: rgba(93, 163, 250, 0.8);
+  color: #fff;
+  border-top-right-radius: 0;
+}
+
+/* Nickname & content */
+.chat-content .chat-nickname {
+  font-size: 0.8rem;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.chat-content .chat-text {
+  font-size: 0.95rem;
+}
+
+.chat-text {
+  font-size: 1.2rem !important;
+}
+
+/* Typing text */
+#typing {
+  text-align: left;
+  padding-left: 20px;
+  font-style: italic;
+  color: #bbb;
+  font-size: 0.9rem;
+}
+
+/* Form styling */
+#form {
+  padding: 10px 15px;
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+#form input {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  padding: 10px 12px;
+  font-size: 1rem;
+  width: 35rem;
+  margin-right: 4rem;
+  display: inline-block;
+}
+
+#form input:focus {
+  outline: 2px solid #5da3fa;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+#form button {
+  border: none;
+  border-radius: 12px;
+  background: #5da3fa;
+  color: #fff;
+  padding: 10px 15px;
+  transition: background 0.3s ease;
+}
+
+#form button:hover {
+  background: #6db4ff;
+}
+
+/* Scrollbar */
+#messages::-webkit-scrollbar {
+  width: 8px;
+}
+#messages::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+#messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media screen and (max-width: 600px) {
+  #form .row {
+    flex-direction: column;
+  }
+  #form .col,
+  #form .col-auto {
+    margin-bottom: 10px;
+  }
 }
