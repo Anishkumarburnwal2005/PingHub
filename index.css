@@ -149,12 +149,60 @@ body {
 }
 
 /* Responsive */
-@media screen and (max-width: 600px) {
-  #form .row {
-    flex-direction: column;
+@media (max-width: 600px) and (orientation: portrait) {
+  #form {
+    padding: 10px 0;
   }
-  #form .col,
-  #form .col-auto {
-    margin-bottom: 10px;
+
+  #form input {
+    font-size: 1.1rem;
+    width: 16rem;
+    padding-left: 5px;
+    padding-right: 0;
+    margin-right: 0;
+    /* margin-right: 4rem; */
+  }
+
+  #form #buttonCon {
+    width: 110px;
+    font-size: 18px;
+    margin-left: auto;
+    padding-left: 5px;
+    padding-right: 0;
+    margin-right: 0;
+  }
+
+  #form #buttonConBalance {
+    display: none;
+  }
+
+  #form #buttonConBalance2 {
+    margin-left: 23rem;
+  }
+
+  #form #button {
+    width: 50px;
+    font-size: 15px;
+    padding-right: 0;
+    margin-right: 0;
+    margin-left: 1rem;
+  }
+
+  #perfect {
+    margin-left: 3rem;
+    padding: 0;
+  }
+
+  #onlineUsers {
+    font-size: 1.4rem;
+    font-weight: 500;
+  }
+
+  .chat-nickname {
+    font-size: 1rem !important;
+  }
+
+  #typing {
+    font-size: 1rem !important;
   }
 }
