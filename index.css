@@ -149,9 +149,11 @@ body {
 }
 
 /* Responsive */
-@media (max-width: 600px) and (orientation: portrait) {
+@media (max-width: 600px) {
   #form {
-    padding: 10px 0;
+    height: 11.5rem;
+    padding: 10px 0 10px 0;
+    margin-bottom: 0;
   }
 
   #form input {
@@ -177,7 +179,8 @@ body {
   }
 
   #form #buttonConBalance2 {
-    margin-left: 23rem;
+    margin-left: 15rem;
+    margin-bottom: 1.5rem;
   }
 
   #form #button {
@@ -185,11 +188,12 @@ body {
     font-size: 15px;
     padding-right: 0;
     margin-right: 0;
-    margin-left: 1rem;
+    margin-top: 0.5rem;
   }
 
   #perfect {
-    margin-left: 3rem;
+    margin-bottom: 0 !important;
+    margin-left: 2.5rem;
     padding: 0;
   }
 
